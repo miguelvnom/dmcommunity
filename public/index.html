@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DM Community - Verificacao</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 2em;
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        #verificacao { display: block; }
+        #conteudo { display: none; }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ddd;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .input-group input.code-input {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .input-group textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+        }
+
+        .input-group input::placeholder, .input-group textarea::placeholder {
+            color: #888;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-copy {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        }
+
+        .btn-delete {
+            background: linear-gradient(45deg, #ff4757, #ff6b81);
+        }
+
+        .btn-raw {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+        }
+
+        .message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .message.error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: #ff6b6b;
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            color: #00ff88;
+            display: block;
+        }
+
+        .welcome {
+            text-align: center;
+        }
+
+        .welcome h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: #00ff88;
+        }
+
+        .welcome .username {
+            font-size: 1.2em;
+            color: #00d9ff;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .scripts-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .script-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .script-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .script-name {
+            font-size: 1.2em;
+            color: #00d9ff;
+            font-weight: bold;
+        }
+
+        .script-author {
+            color: #00ff88;
+            font-size: 0.9em;
+        }
+
+        .script-date {
+            color: #888;
+            font-size: 0.8em;
+        }
+
+        .script-code {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            color: #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+
+        .script-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-logout {
+            margin-top: 30px;
+            background: linear-gradient(45deg, #ff4757, #ff6b81);
+        }
+
+        .info-box {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .info-box p {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .info-box code {
+            color: #00d9ff;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 217, 255, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>DM Community</h1>
+            <p>Sistema de Verificacao</p>
+        </div>
+
+        <!-- Tela de Verificacao -->
+        <div id="verificacao">
+            <div class="input-group">
+                <label>Digite seu codigo de acesso:</label>
+                <input type="text" id="codigo" class="code-input" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19">
+            </div>
+
+            <button class="btn" id="btnVerificar" onclick="verificar()">
+                Verificar Codigo
+            </button>
+
+            <div class="message" id="mensagem"></div>
+
+            <div class="info-box">
+                <p>Use <code>!verificar</code> no Discord para obter seu codigo.</p>
+            </div>
+        </div>
+
+        <!-- Tela de Conteudo (apos verificacao) -->
+        <div id="conteudo">
+            <div class="welcome">
+                <h2>Bem-vindo!</h2>
+                <p class="username" id="nomeUsuario"></p>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="trocarTab('scripts')">Ver Scripts</div>
+                <div class="tab" onclick="trocarTab('adicionar')">Adicionar Script</div>
+            </div>
+
+            <!-- Tab: Ver Scripts -->
+            <div id="tab-scripts" class="tab-content active">
+                <div class="scripts-list" id="listaScripts">
+                    <div class="empty-message">Carregando scripts...</div>
+                </div>
+            </div>
+
+            <!-- Tab: Adicionar Script -->
+            <div id="tab-adicionar" class="tab-content">
+                <div class="input-group">
+                    <label>Nome do Script:</label>
+                    <input type="text" id="nomeScript" placeholder="Ex: Auto Farm, Speed Hack, etc.">
+                </div>
+
+                <div class="input-group">
+                    <label>Codigo Obfuscado:</label>
+                    <textarea id="codigoScript" placeholder="Cole seu codigo obfuscado aqui..."></textarea>
+                </div>
+
+                <button class="btn" onclick="adicionarScript()">
+                    Salvar Script
+                </button>
+
+                <div class="message" id="mensagemScript"></div>
+            </div>
+
+            <button class="btn btn-logout" onclick="sair()">
+                Sair
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        const STORAGE_KEY = 'dmcommunity_code';
+        let usuarioAtual = '';
+        let codigoAtual = '';
+
+        window.onload = function() {
+            const codigoSalvo = localStorage.getItem(STORAGE_KEY);
+            if (codigoSalvo) {
+                codigoAtual = codigoSalvo;
+                validarSessao(codigoSalvo);
+            }
+        };
+
+        document.getElementById('codigo').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            let formatted = '';
+            for (let i = 0; i < value.length && i < 16; i++) {
+                if (i > 0 && i % 4 === 0) formatted += '-';
+                formatted += value[i];
+            }
+            e.target.value = formatted;
+        });
+
+        document.getElementById('codigo').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verificar();
+        });
+
+        async function verificar() {
+            const codigo = document.getElementById('codigo').value;
+            const btn = document.getElementById('btnVerificar');
+
+            if (!codigo || codigo.length < 19) {
+                mostrarMensagem('mensagem', 'Digite o codigo completo', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Verificando...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/verificar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem(STORAGE_KEY, codigo);
+                    codigoAtual = codigo;
+                    mostrarMensagem('mensagem', data.message, 'success');
+
+                    setTimeout(() => {
+                        mostrarConteudo(data.user);
+                    }, 1000);
+                } else {
+                    mostrarMensagem('mensagem', data.message, 'error');
+                }
+            } catch (error) {
+                mostrarMensagem('mensagem', 'Erro ao conectar com o servidor', 'error');
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Verificar Codigo';
+        }
+
+        async function validarSessao(codigo) {
+            try {
+                const response = await fetch(`${API_URL}/api/validar-sessao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo })
+                });
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    mostrarConteudo(data.user);
+                } else {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            } catch (error) {
+                console.log('Erro ao validar sessao');
+            }
+        }
+
+        function mostrarConteudo(username) {
+            usuarioAtual = username;
+            document.getElementById('verificacao').style.display = 'none';
+            document.getElementById('conteudo').style.display = 'block';
+            document.getElementById('nomeUsuario').textContent = username || 'Usuario';
+            carregarScripts();
+        }
+
+        function mostrarMensagem(elementId, texto, tipo) {
+            const msg = document.getElementById(elementId);
+            msg.textContent = texto;
+            msg.className = 'message ' + tipo;
+
+            if (tipo === 'success') {
+                setTimeout(() => {
+                    msg.className = 'message';
+                }, 3000);
+            }
+        }
+
+        function trocarTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+
+            if (tab === 'scripts') {
+                carregarScripts();
+            }
+        }
+
+        async function carregarScripts() {
+            const lista = document.getElementById('listaScripts');
+            lista.innerHTML = '<div class="empty-message">Carregando scripts...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/scripts`);
+                const scripts = await response.json();
+
+                if (scripts.length === 0) {
+                    lista.innerHTML = '<div class="empty-message">Nenhum script adicionado ainda.</div>';
+                    return;
+                }
+
+                lista.innerHTML = scripts.map(script => `
+                    <div class="script-card">
+                        <div class="script-header">
+                            <div>
+                                <div class="script-name">${escapeHtml(script.nome)}</div>
+                                <div class="script-author">Por: ${escapeHtml(script.autor)}</div>
+                            </div>
+                            <div class="script-date">${formatarData(script.criadoEm)}</div>
+                        </div>
+                        <div class="script-code" id="code-${script.id}">${escapeHtml(script.script)}</div>
+                        <div class="script-actions">
+                            <button class="btn btn-small btn-copy" onclick="copiarScript(${script.id})">Copiar</button>
+                            <button class="btn btn-small btn-raw" onclick="abrirRaw(${script.id})">Raw</button>
+                            ${script.autor === usuarioAtual ? `<button class="btn btn-small btn-delete" onclick="deletarScript(${script.id})">Deletar</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                lista.innerHTML = '<div class="empty-message">Erro ao carregar scripts.</div>';
+            }
+        }
+
+        async function adicionarScript() {
+            const nome = document.getElementById('nomeScript').value.trim();
+            const script = document.getElementById('codigoScript').value.trim();
+
+            if (!nome || !script) {
+                mostrarMensagem('mensagemScript', 'Preencha todos os campos', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/scripts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome,
+                        script,
+                        codigo: codigoAtual,
+                        usuario: usuarioAtual
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarMensagem('mensagemScript', data.message, 'success');
+                    document.getElementById('nomeScript').value = '';
+                    document.getElementById('codigoScript').value = '';
+                } else {
+                    mostrarMensagem('mensagemScript', data.message, 'error');
+                }
+            } catch (error) {
+                mostrarMensagem('mensagemScript', 'Erro ao salvar script', 'error');
+            }
+        }
+
+        function copiarScript(id) {
+            const code = document.getElementById('code-' + id).textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Codigo copiado!');
+            });
+        }
+
+        function abrirRaw(id) {
+            window.open(`${API_URL}/raw/${id}`, '_blank');
+        }
+
+        async function deletarScript(id) {
+            if (!confirm('Tem certeza que deseja deletar este script?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/scripts/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo: codigoAtual })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    carregarScripts();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Erro ao deletar script');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatarData(data) {
+            return new Date(data).toLocaleString('pt-BR');
+        }
+
+        function sair() {
+            localStorage.removeItem(STORAGE_KEY);
+            document.getElementById('verificacao').style.display = 'block';
+            document.getElementById('conteudo').style.display = 'none';
+            document.getElementById('codigo').value = '';
+            document.getElementById('mensagem').className = 'message';
+            codigoAtual = '';
+            usuarioAtual = '';
+        }
+    </script>
+</body>
+</html>

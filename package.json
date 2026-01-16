@@ -1,0 +1,17 @@
+{
+  "name": "dmcommunity-verificacao",
+  "version": "1.0.0",
+  "description": "Sistema de verificacao com bot Discord",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "bot": "node bot.js",
+    "dev": "node server.js & node bot.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "discord.js": "^14.14.1",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2"
+  }
+}
