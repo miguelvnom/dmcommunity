@@ -1,26 +1,16 @@
 require('dotenv').config();
 
 const { Client, GatewayIntentBits } = require('discord.js');
+const { MongoClient } = require('mongodb');
 const config = require('./config');
 
-// Armazena os codigos validos (compartilhado com o server via arquivo)
-const fs = require('fs');
-const CODES_FILE = './codes.json';
-
-// Carrega codigos existentes ou cria arquivo vazio
-function loadCodes() {
-    try {
-        if (fs.existsSync(CODES_FILE)) {
-            return JSON.parse(fs.readFileSync(CODES_FILE, 'utf8'));
-        }
-    } catch (e) {
-        console.log('Criando novo arquivo de codigos...');
-    }
-    return {};
-}
-
-function saveCodes(codes) {
-    fs.writeFileSync(CODES_FILE, JSON.stringify(codes, null, 2));
+// Conexao MongoDB
+let db;
+async function connectDB() {
+    const client = new MongoClient(process.env.MONGODB_URI);
+    await client.connect();
+    db = client.db('dmcommunity');
+    console.log('Conectado ao MongoDB!');
 }
 
 // Gera codigo aleatorio
@@ -47,10 +37,13 @@ const client = new Client({
     ]
 });
 
-client.once('ready', () => {
+client.once('ready', async () => {
     console.log(`Bot online como ${client.user.tag}`);
     console.log(`Servidor: ${config.GUILD_ID}`);
     console.log(`Cargos permitidos: ${config.ALLOWED_ROLES.length}`);
+
+    // Conecta ao MongoDB
+    await connectDB();
 });
 
 client.on('messageCreate', async (message) => {
@@ -71,33 +64,36 @@ client.on('messageCreate', async (message) => {
 
         // Gera codigo unico
         const code = generateCode();
-        const codes = loadCodes();
 
-        // Salva codigo com info do usuario
-        codes[code] = {
-            odiscer: message.author.id,
-            odiscerTag: message.author.tag,
-            criadoEm: new Date().toISOString(),
-            usado: false
-        };
-
-        saveCodes(codes);
-
-        // Envia codigo por DM
+        // Salva codigo no MongoDB
         try {
-            await message.author.send({
-                embeds: [{
-                    title: 'Codigo de Verificacao',
-                    description: `Seu codigo de acesso:\n\n\`\`\`${code}\`\`\``,
-                    color: 0x00ff00,
-                    footer: { text: 'Use este codigo no site para acessar.' },
-                    timestamp: new Date().toISOString()
-                }]
+            await db.collection('codes').insertOne({
+                code: code,
+                discordId: message.author.id,
+                discordTag: message.author.tag,
+                criadoEm: new Date().toISOString(),
+                usado: false
             });
-            await message.reply('Enviei seu codigo de verificacao por DM!');
+
+            // Envia codigo por DM
+            try {
+                await message.author.send({
+                    embeds: [{
+                        title: 'Codigo de Verificacao',
+                        description: `Seu codigo de acesso:\n\n\`\`\`${code}\`\`\``,
+                        color: 0x00ff00,
+                        footer: { text: 'Use este codigo no site para acessar.' },
+                        timestamp: new Date().toISOString()
+                    }]
+                });
+                await message.reply('Enviei seu codigo de verificacao por DM!');
+            } catch (error) {
+                // Se nao conseguir enviar DM, envia no canal
+                await message.reply(`Nao consegui enviar DM. Seu codigo: ||\`${code}\`|| (clique para revelar)`);
+            }
         } catch (error) {
-            // Se nao conseguir enviar DM, envia no canal (cuidado com seguranca)
-            await message.reply(`Nao consegui enviar DM. Seu codigo: ||\`${code}\`|| (clique para revelar)`);
+            console.error('Erro ao salvar codigo:', error);
+            await message.reply('Erro ao gerar codigo. Tente novamente.');
         }
     }
 });
