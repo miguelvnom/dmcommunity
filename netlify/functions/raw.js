@@ -16,7 +16,15 @@ exports.handler = async (event, context) => {
         // Pega o ID e codigo do query parameter
         const params = event.queryStringParameters || {};
         let id = params.id;
-        const codigo = params.codigo;
+        let codigo = params.codigo;
+
+        // Fallback: tenta pegar codigo da rawQuery
+        if (!codigo && event.rawQuery) {
+            const codigoMatch = event.rawQuery.match(/codigo=([^&]+)/);
+            if (codigoMatch) {
+                codigo = decodeURIComponent(codigoMatch[1]);
+            }
+        }
 
         // Verifica se o codigo de acesso foi fornecido
         if (!codigo) {
