@@ -12,6 +12,6 @@
 
 [[redirects]]
   from = "/raw/:id"
-  to = "/.netlify/functions/raw?id=:id"
+  to = "/raw.html"
   status = 200
   force = true

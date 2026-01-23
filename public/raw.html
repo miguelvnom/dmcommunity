@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DM Community - Raw Script</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', monospace;
+            background: #1a1a2e;
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .error h1 {
+            color: #ff4757;
+            margin-bottom: 20px;
+        }
+
+        .error p {
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .error a {
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #00d9ff;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+        <div class="loading">Carregando...</div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'dmcommunity_code';
+
+        async function loadScript() {
+            const codigo = localStorage.getItem(STORAGE_KEY);
+
+            if (!codigo) {
+                showError();
+                return;
+            }
+
+            // Pega o ID da URL (ex: /raw/123 ou /raw.html?id=123)
+            const pathMatch = window.location.pathname.match(/\/raw\/(\d+)/);
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = pathMatch ? pathMatch[1] : urlParams.get('id');
+
+            if (!id) {
+                document.getElementById('content').innerHTML = '<div class="error"><h1>ID invalido</h1></div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${window.location.origin}/api/raw-protected`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, codigo })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('content').innerHTML = '<pre>' + escapeHtml(data.script) + '</pre>';
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                showError('Erro ao carregar script');
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('content').innerHTML = `
+                <div class="error">
+                    <h1>Acesso Negado</h1>
+                    <p>${message || 'Voce precisa fazer login para ver este script.'}</p>
+                    <a href="/">Fazer Login</a>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadScript();
+    </script>
+</body>
+</html>
