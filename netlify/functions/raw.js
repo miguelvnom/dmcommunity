@@ -13,9 +13,19 @@ async function connectDB() {
 
 exports.handler = async (event, context) => {
     try {
-        // Pega o ID do query parameter
+        // Pega o ID e codigo do query parameter
         const params = event.queryStringParameters || {};
         let id = params.id;
+        const codigo = params.codigo;
+
+        // Verifica se o codigo de acesso foi fornecido
+        if (!codigo) {
+            return {
+                statusCode: 401,
+                headers: { 'Content-Type': 'text/plain' },
+                body: 'Acesso negado. Faca login primeiro.'
+            };
+        }
 
         // Se não veio por query, tenta pegar do path
         if (!id) {
@@ -58,13 +68,24 @@ exports.handler = async (event, context) => {
             return {
                 statusCode: 400,
                 headers: { 'Content-Type': 'text/plain' },
-                body: 'ID invalido. Debug: path=' + (event.path || 'null') + ', rawUrl=' + (event.rawUrl || 'null')
+                body: 'ID invalido'
             };
         }
 
         const client = await connectDB();
         const db = client.db('dmcommunity');
         const scripts = db.collection('scripts');
+        const codes = db.collection('codes');
+
+        // Valida o codigo de acesso
+        const codeData = await codes.findOne({ code: codigo.toUpperCase() });
+        if (!codeData) {
+            return {
+                statusCode: 401,
+                headers: { 'Content-Type': 'text/plain' },
+                body: 'Codigo de acesso invalido'
+            };
+        }
 
         // Tenta buscar como número ou como string
         const idNum = parseInt(id);
