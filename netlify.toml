@@ -11,6 +11,7 @@
   status = 200
 
 [[redirects]]
-  from = "/raw/*"
-  to = "/.netlify/functions/raw?id=:splat"
+  from = "/raw/:id"
+  to = "/.netlify/functions/raw"
   status = 200
+  force = true
