@@ -6,11 +6,30 @@ const config = require('./config');
 
 // Conexao MongoDB
 let db;
-async function connectDB() {
-    const client = new MongoClient(process.env.MONGODB_URI);
-    await client.connect();
-    db = client.db('dmcommunity');
-    console.log('Conectado ao MongoDB!');
+let mongoClient;
+
+async function connectDB(retries = 5) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            mongoClient = new MongoClient(process.env.MONGODB_URI, {
+                serverSelectionTimeoutMS: 10000,
+                connectTimeoutMS: 10000
+            });
+            await mongoClient.connect();
+            db = mongoClient.db('dmcommunity');
+            console.log('Conectado ao MongoDB!');
+            return;
+        } catch (error) {
+            console.error(`Tentativa ${i + 1}/${retries} falhou:`, error.message);
+            if (i < retries - 1) {
+                console.log('Tentando novamente em 5 segundos...');
+                await new Promise(r => setTimeout(r, 5000));
+            } else {
+                console.error('Falha ao conectar ao MongoDB apos todas as tentativas.');
+                process.exit(1);
+            }
+        }
+    }
 }
 
 // Gera codigo aleatorio
