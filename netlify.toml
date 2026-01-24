@@ -15,3 +15,9 @@
   to = "/.netlify/functions/raw?id=:id"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/view/:id"
+  to = "/view.html"
+  status = 200
+  force = true

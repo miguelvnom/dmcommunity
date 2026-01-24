@@ -586,7 +586,7 @@
         }
 
         function abrirRaw(id) {
-            window.open(`${API_URL}/raw/${id}?codigo=${encodeURIComponent(codigoAtual)}`, '_blank');
+            window.open(`${API_URL}/view/${id}`, '_blank');
         }
 
         async function deletarScript(id) {
