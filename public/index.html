@@ -533,7 +533,8 @@
                         <div class="script-code" id="code-${script.id}">${escapeHtml(script.script)}</div>
                         <div class="script-actions">
                             <button class="btn btn-small btn-copy" onclick="copiarScript(${script.id})">Copiar</button>
-                            <button class="btn btn-small btn-raw" onclick="abrirRaw(${script.id})">Raw</button>
+                            <button class="btn btn-small btn-raw" onclick="copiarRawLink(${script.id})">Copiar Raw</button>
+                            <button class="btn btn-small btn-copy" onclick="abrirView(${script.id})">Ver</button>
                             ${script.autor === usuarioAtual ? `<button class="btn btn-small btn-delete" onclick="deletarScript(${script.id})">Deletar</button>` : ''}
                         </div>
                     </div>
@@ -585,7 +586,14 @@
             });
         }
 
-        function abrirRaw(id) {
+        function copiarRawLink(id) {
+            const rawUrl = `${API_URL}/raw/${id}`;
+            navigator.clipboard.writeText(rawUrl).then(() => {
+                alert('Link do Raw copiado!\n\n' + rawUrl);
+            });
+        }
+
+        function abrirView(id) {
             window.open(`${API_URL}/view/${id}`, '_blank');
         }
 
