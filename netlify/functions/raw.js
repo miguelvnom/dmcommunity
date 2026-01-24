@@ -16,21 +16,26 @@ exports.handler = async (event, context) => {
         const params = event.queryStringParameters || {};
         let id = params.id;
 
-        // Detecta se é navegador pelo User-Agent
+        // Pega o User-Agent
         const userAgent = (event.headers['user-agent'] || event.headers['User-Agent'] || '').toLowerCase();
-        const isBrowser = userAgent.includes('mozilla') ||
-                          userAgent.includes('chrome') ||
-                          userAgent.includes('safari') ||
-                          userAgent.includes('firefox') ||
-                          userAgent.includes('edge') ||
-                          userAgent.includes('opera');
 
-        // Se for navegador acessando /raw/ direto, bloqueia
-        if (isBrowser) {
+        // Só permite se for executor Roblox (contém "roblox") ou User-Agent vazio/curto
+        const isRobloxExecutor = userAgent.includes('roblox') ||
+                                  userAgent.includes('synapse') ||
+                                  userAgent.includes('krnl') ||
+                                  userAgent.includes('fluxus') ||
+                                  userAgent.includes('delta') ||
+                                  userAgent.includes('script-ware') ||
+                                  userAgent.includes('electron') ||
+                                  userAgent === '' ||
+                                  userAgent.length < 20;
+
+        // Bloqueia tudo que não for executor
+        if (!isRobloxExecutor) {
             return {
-                statusCode: 401,
+                statusCode: 403,
                 headers: { 'Content-Type': 'text/plain' },
-                body: 'Acesso negado. Use o site para visualizar scripts.'
+                body: 'NAO AUTORIZADO'
             };
         }
 
