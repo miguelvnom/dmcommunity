@@ -34,8 +34,49 @@ exports.handler = async (event, context) => {
         if (!isRobloxExecutor) {
             return {
                 statusCode: 403,
-                headers: { 'Content-Type': 'text/plain' },
-                body: 'NAO AUTORIZADO'
+                headers: { 'Content-Type': 'text/html' },
+                body: `<!DOCTYPE html>
+<html>
+<head>
+    <title>NAO AUTORIZADO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 4rem;
+            color: #ff4757;
+            text-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        p {
+            font-size: 1.5rem;
+            color: #ff6b81;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NAO AUTORIZADO</h1>
+        <p>TENTE DESOBFUSCAR OUTRO SCRIPT!!!!!</p>
+    </div>
+</body>
+</html>`
             };
         }
 
