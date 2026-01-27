@@ -53,6 +53,12 @@ exports.handler = async (event, context) => {
             text-align: center;
             padding: 40px;
         }
+        .emoji {
+            width: 250px;
+            height: auto;
+            margin-bottom: 30px;
+            animation: shake 0.5s infinite;
+        }
         h1 {
             font-size: 4rem;
             color: #ff4757;
@@ -68,10 +74,15 @@ exports.handler = async (event, context) => {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
         }
+        @keyframes shake {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="https://media.discordapp.net/attachments/1460865475427962921/1465551386207850638/depositphotos_139840912-stock-illustration-laughing-with-tears-and-pointing.png?ex=69798497&is=69783317&hm=8a930e13a1f6c2817753214210683fe33a0f71964e8868683494b0d04d767889&=&format=webp&quality=lossless&width=660&height=433" alt="Emoji rindo" class="emoji">
         <h1>NAO AUTORIZADO</h1>
         <p>TENTE DESOBFUSCAR OUTRO SCRIPT!!!!!</p>
     </div>
