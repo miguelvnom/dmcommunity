@@ -329,19 +329,15 @@
         <!-- Tela de Verificacao -->
         <div id="verificacao">
             <div class="input-group">
-                <label>Digite seu codigo de acesso:</label>
-                <input type="text" id="codigo" class="code-input" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19">
+                <label>Digite a senha de acesso:</label>
+                <input type="password" id="codigo" placeholder="Digite a senha">
             </div>
 
             <button class="btn" id="btnVerificar" onclick="verificar()">
-                Verificar Codigo
+                Entrar
             </button>
 
             <div class="message" id="mensagem"></div>
-
-            <div class="info-box">
-                <p>Use <code>!verificar</code> no Discord para obter seu codigo.</p>
-            </div>
         </div>
 
         <!-- Tela de Conteudo (apos verificacao) -->
@@ -402,16 +398,6 @@
             }
         };
 
-        document.getElementById('codigo').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-            let formatted = '';
-            for (let i = 0; i < value.length && i < 16; i++) {
-                if (i > 0 && i % 4 === 0) formatted += '-';
-                formatted += value[i];
-            }
-            e.target.value = formatted;
-        });
-
         document.getElementById('codigo').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') verificar();
         });
@@ -420,8 +406,8 @@
             const codigo = document.getElementById('codigo').value;
             const btn = document.getElementById('btnVerificar');
 
-            if (!codigo || codigo.length < 19) {
-                mostrarMensagem('mensagem', 'Digite o codigo completo', 'error');
+            if (!codigo) {
+                mostrarMensagem('mensagem', 'Digite a senha', 'error');
                 return;
             }
 
@@ -453,7 +439,7 @@
             }
 
             btn.disabled = false;
-            btn.textContent = 'Verificar Codigo';
+            btn.textContent = 'Entrar';
         }
 
         async function validarSessao(codigo) {
