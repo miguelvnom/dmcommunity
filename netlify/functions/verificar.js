@@ -1,15 +1,4 @@
-const { MongoClient } = require('mongodb');
-
-let cachedClient = null;
-
-async function connectDB() {
-    if (cachedClient) return cachedClient;
-
-    const client = new MongoClient(process.env.MONGODB_URI);
-    await client.connect();
-    cachedClient = client;
-    return client;
-}
+const SENHA_UNICA = 'Danielmigueldanielmiguelfeioscriptlixococo103643cod8gomorseu10';
 
 exports.handler = async (event, context) => {
     // CORS headers
@@ -32,32 +21,20 @@ exports.handler = async (event, context) => {
         const { codigo } = JSON.parse(event.body || '{}');
 
         if (!codigo) {
-            return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Codigo nao fornecido' }) };
+            return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Senha nao fornecida' }) };
         }
 
-        const client = await connectDB();
-        const db = client.db('dmcommunity');
-        const codes = db.collection('codes');
-
-        const codeData = await codes.findOne({ code: codigo.toUpperCase() });
-
-        if (!codeData) {
-            return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Codigo invalido' }) };
+        if (codigo !== SENHA_UNICA) {
+            return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Senha incorreta' }) };
         }
-
-        // Marca codigo como usado
-        await codes.updateOne(
-            { code: codigo.toUpperCase() },
-            { $set: { usado: true, usadoEm: new Date().toISOString() } }
-        );
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                message: 'Codigo valido! Bem-vindo!',
-                user: codeData.discordTag
+                message: 'Senha correta! Bem-vindo!',
+                user: 'Usuario Autorizado'
             })
         };
     } catch (error) {

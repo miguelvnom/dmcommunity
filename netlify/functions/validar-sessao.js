@@ -1,15 +1,4 @@
-const { MongoClient } = require('mongodb');
-
-let cachedClient = null;
-
-async function connectDB() {
-    if (cachedClient) return cachedClient;
-
-    const client = new MongoClient(process.env.MONGODB_URI);
-    await client.connect();
-    cachedClient = client;
-    return client;
-}
+const SENHA_UNICA = 'Danielmigueldanielmiguelfeioscriptlixococo103643cod8gomorseu10';
 
 exports.handler = async (event, context) => {
     const headers = {
@@ -34,14 +23,8 @@ exports.handler = async (event, context) => {
             return { statusCode: 200, headers, body: JSON.stringify({ valid: false }) };
         }
 
-        const client = await connectDB();
-        const db = client.db('dmcommunity');
-        const codes = db.collection('codes');
-
-        const codeData = await codes.findOne({ code: codigo.toUpperCase() });
-
-        if (codeData) {
-            return { statusCode: 200, headers, body: JSON.stringify({ valid: true, user: codeData.discordTag }) };
+        if (codigo === SENHA_UNICA) {
+            return { statusCode: 200, headers, body: JSON.stringify({ valid: true, user: 'Usuario Autorizado' }) };
         }
 
         return { statusCode: 200, headers, body: JSON.stringify({ valid: false }) };
