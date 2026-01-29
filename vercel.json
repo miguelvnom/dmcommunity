@@ -6,7 +6,7 @@
   "routes": [
     { "src": "/", "dest": "/index.html" },
     { "src": "/view", "dest": "/view.html" },
-    { "src": "/raw/(.*)", "dest": "/raw.html" },
+    { "src": "/raw/(.*)", "dest": "/api/raw?id=$1" },
     { "src": "/api/(.*)", "dest": "/api/$1" }
   ]
 }
