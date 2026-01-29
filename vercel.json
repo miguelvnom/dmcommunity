@@ -1,5 +1,4 @@
 {
-  "outputDirectory": "public",
   "rewrites": [
     { "source": "/raw/:id", "destination": "/api/raw?id=:id" }
   ]
