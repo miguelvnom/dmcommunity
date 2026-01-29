@@ -1,4 +1,7 @@
 {
+  "buildCommand": "",
+  "installCommand": "",
+  "framework": null,
   "rewrites": [
     { "source": "/raw/:id", "destination": "/api/raw?id=:id" }
   ]
