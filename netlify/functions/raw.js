@@ -11,87 +11,69 @@ async function connectDB() {
     return client;
 }
 
-exports.handler = async (event, context) => {
-    try {
-        const params = event.queryStringParameters || {};
-        let id = params.id;
-
-        // Pega o User-Agent
-        const userAgent = (event.headers['user-agent'] || event.headers['User-Agent'] || '').toLowerCase();
-
-        // Só permite se for executor Roblox (contém "roblox") ou User-Agent vazio/curto
-        const isRobloxExecutor = userAgent.includes('roblox') ||
-                                  userAgent.includes('synapse') ||
-                                  userAgent.includes('krnl') ||
-                                  userAgent.includes('fluxus') ||
-                                  userAgent.includes('delta') ||
-                                  userAgent.includes('script-ware') ||
-                                  userAgent.includes('electron') ||
-                                  userAgent === '' ||
-                                  userAgent.length < 20;
-
-        // Bloqueia tudo que não for executor
-        if (!isRobloxExecutor) {
-            return {
-                statusCode: 403,
-                headers: { 'Content-Type': 'text/html' },
-                body: `<!DOCTYPE html>
-<html>
+// Pagina HTML de nao autorizado
+const UNAUTHORIZED_HTML = `<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NAO AUTORIZADO</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            min-height: 100vh;
+            font-family: 'Consolas', monospace;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', Arial, sans-serif;
-        }
-        .container {
+            flex-direction: column;
             text-align: center;
-            padding: 40px;
         }
-        .emoji {
-            width: 250px;
-            height: auto;
-            margin-bottom: 30px;
-            animation: shake 0.5s infinite;
-        }
-        h1 {
-            font-size: 4rem;
-            color: #ff4757;
-            text-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
-            margin-bottom: 20px;
-            animation: pulse 1.5s infinite;
-        }
-        p {
-            font-size: 1.5rem;
-            color: #ff6b81;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        @keyframes shake {
-            0%, 100% { transform: rotate(-5deg); }
-            50% { transform: rotate(5deg); }
-        }
+        h1 { color: #ff4757; font-size: 3em; margin-bottom: 20px; }
+        p { color: #ff6b6b; font-size: 1.2em; }
+        img { margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="https://media.discordapp.net/attachments/1460865475427962921/1465551386207850638/depositphotos_139840912-stock-illustration-laughing-with-tears-and-pointing.png?ex=69798497&is=69783317&hm=8a930e13a1f6c2817753214210683fe33a0f71964e8868683494b0d04d767889&=&format=webp&quality=lossless&width=660&height=433" alt="Emoji rindo" class="emoji">
-        <h1>NAO AUTORIZADO</h1>
-        <p>TENTE DESOBFUSCAR OUTRO SCRIPT!!!!!</p>
-    </div>
+    <img src="https://i.imgur.com/JvPrBbS.png" alt="emoji rindo" width="100">
+    <h1>NAO AUTORIZADO</h1>
+    <p>TENTE DESOBFUSCAR OUTRO SCRIPT!!!!!</p>
 </body>
-</html>`
-            };
+</html>`;
+
+// Resposta de nao autorizado (detecta se e browser ou executor)
+function getUnauthorizedResponse(event) {
+    const accept = event.headers['accept'] || event.headers['Accept'] || '';
+    const isBrowser = accept.includes('text/html');
+
+    if (isBrowser) {
+        return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'text/html' },
+            body: UNAUTHORIZED_HTML
+        };
+    } else {
+        return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'text/plain' },
+            body: '-- NAO AUTORIZADO\n-- Codigo de acesso invalido ou ausente\n-- Acesse o site para obter seu codigo'
+        };
+    }
+}
+
+exports.handler = async (event, context) => {
+    try {
+        const params = event.queryStringParameters || {};
+        let id = params.id;
+        let code = params.code;
+
+        // SEMPRE exige codigo - nao importa se e browser ou executor
+        if (!code) {
+            return getUnauthorizedResponse(event);
         }
 
-        // Se não veio ID por query, tenta pegar do path
+        // Se nao veio ID por query, tenta pegar do path
         if (!id) {
             const urlToParse = event.rawUrl || event.path || '';
             let match = urlToParse.match(/\/raw\/(\d+)/);
@@ -106,27 +88,31 @@ exports.handler = async (event, context) => {
             }
         }
 
-        // Fallback: tenta do rawQuery
-        if (!id && event.rawQuery) {
-            const queryMatch = event.rawQuery.match(/id=(\d+)/);
-            if (queryMatch) {
-                id = queryMatch[1];
-            }
-        }
-
-        // Valida se o ID existe e é um número
+        // Valida se o ID existe e e um numero
         if (!id || isNaN(parseInt(id))) {
             return {
                 statusCode: 400,
                 headers: { 'Content-Type': 'text/plain' },
-                body: 'ID invalido'
+                body: '-- ID invalido'
             };
         }
 
         const client = await connectDB();
         const db = client.db('dmcommunity');
-        const scripts = db.collection('scripts');
 
+        // Valida o codigo no banco de dados - so aceita codigos ativados
+        const codes = db.collection('codes');
+        const codeData = await codes.findOne({
+            code: code.toUpperCase(),
+            usado: true  // So aceita codigos que foram ativados pelo usuario
+        });
+
+        if (!codeData) {
+            return getUnauthorizedResponse(event);
+        }
+
+        // Codigo valido - busca o script
+        const scripts = db.collection('scripts');
         const idNum = parseInt(id);
         const script = await scripts.findOne({
             $or: [{ id: idNum }, { id: id.toString() }]
@@ -136,7 +122,7 @@ exports.handler = async (event, context) => {
             return {
                 statusCode: 404,
                 headers: { 'Content-Type': 'text/plain' },
-                body: 'Script nao encontrado'
+                body: '-- Script nao encontrado'
             };
         }
 
@@ -150,7 +136,7 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 500,
             headers: { 'Content-Type': 'text/plain' },
-            body: 'Erro no servidor'
+            body: '-- Erro no servidor'
         };
     }
 };

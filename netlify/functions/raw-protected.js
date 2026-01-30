@@ -53,13 +53,16 @@ exports.handler = async (event, context) => {
         const scripts = db.collection('scripts');
         const codes = db.collection('codes');
 
-        // Valida o codigo de acesso
-        const codeData = await codes.findOne({ code: codigo.toUpperCase() });
+        // Valida o codigo de acesso - so aceita codigos ativados
+        const codeData = await codes.findOne({
+            code: codigo.toUpperCase(),
+            usado: true  // So aceita codigos que foram ativados pelo usuario
+        });
         if (!codeData) {
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({ success: false, message: 'Codigo de acesso invalido' })
+                body: JSON.stringify({ success: false, message: 'NAO AUTORIZADO - Codigo invalido ou nao ativado' })
             };
         }
 
