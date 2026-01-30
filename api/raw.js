@@ -31,6 +31,36 @@ const UNAUTHORIZED_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+// Detecta se e browser/curl (NAO executor Roblox)
+function isBrowserOrTool(req) {
+    const headers = req.headers || {};
+
+    // Headers que SO navegadores enviam
+    if (headers['sec-fetch-site']) return true;
+    if (headers['sec-fetch-mode']) return true;
+    if (headers['sec-fetch-dest']) return true;
+    if (headers['sec-ch-ua']) return true;
+    if (headers['accept-language']) return true;
+
+    // Accept com text/html = browser
+    const accept = headers['accept'] || '';
+    if (accept.includes('text/html')) return true;
+
+    // User-Agents de browsers e ferramentas
+    const ua = (headers['user-agent'] || '').toLowerCase();
+    const blockedAgents = [
+        'mozilla', 'chrome', 'safari', 'firefox', 'edge', 'opera',
+        'postman', 'insomnia', 'curl', 'wget', 'python', 'node-fetch',
+        'axios', 'got', 'httpie', 'fiddler', 'charles'
+    ];
+
+    for (const agent of blockedAgents) {
+        if (ua.includes(agent)) return true;
+    }
+
+    return false;
+}
+
 // Resposta de nao autorizado
 function unauthorized(req, res) {
     const accept = req.headers['accept'] || '';
@@ -40,18 +70,13 @@ function unauthorized(req, res) {
         return res.status(403).send(UNAUTHORIZED_HTML);
     } else {
         res.setHeader('Content-Type', 'text/plain');
-        return res.status(403).send('-- NAO AUTORIZADO\n-- Codigo de acesso invalido ou ausente');
+        return res.status(403).send('-- NAO AUTORIZADO\n-- Acesso bloqueado');
     }
 }
 
 module.exports = async (req, res) => {
     try {
         let { id, code } = req.query;
-
-        // SEMPRE exige codigo - nao importa se e browser ou executor
-        if (!code) {
-            return unauthorized(req, res);
-        }
 
         // Tenta pegar ID do path (/raw/123)
         if (!id) {
@@ -67,18 +92,25 @@ module.exports = async (req, res) => {
         const client = await clientPromise;
         const db = client.db('dmcommunity');
 
-        // Valida o codigo no banco - so aceita codigos ativados
-        const codes = db.collection('codes');
-        const codeData = await codes.findOne({
-            code: code.toUpperCase(),
-            usado: true  // So aceita codigos que foram ativados pelo usuario
-        });
+        // Se tem codigo, valida ele
+        if (code) {
+            const codes = db.collection('codes');
+            const codeData = await codes.findOne({
+                code: code.toUpperCase(),
+                usado: true
+            });
 
-        if (!codeData) {
-            return unauthorized(req, res);
+            if (!codeData) {
+                return unauthorized(req, res);
+            }
+        } else {
+            // Sem codigo - so permite se for executor Roblox
+            if (isBrowserOrTool(req)) {
+                return unauthorized(req, res);
+            }
         }
 
-        // Codigo valido - busca o script
+        // Busca o script
         const scripts = db.collection('scripts');
         const script = await scripts.findOne({ id: parseInt(id) });
 
