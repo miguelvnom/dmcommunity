@@ -15,9 +15,11 @@ module.exports = async (req, res) => {
         const scripts = db.collection('scripts');
         const codes = db.collection('codes');
 
-        // GET - Listar scripts
+        // GET - Listar scripts (SEM o conteudo do script por seguranca)
         if (req.method === 'GET') {
-            const allScripts = await scripts.find({}).sort({ criadoEm: -1 }).toArray();
+            const allScripts = await scripts.find({}, {
+                projection: { script: 0 }  // NAO retorna o campo script
+            }).sort({ criadoEm: -1 }).toArray();
             return res.json(allScripts);
         }
 
