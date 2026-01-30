@@ -1,46 +1,114 @@
 const clientPromise = require('./lib/mongodb');
 
-module.exports = async (req, res) => {
-    try {
-        const { id } = req.query;
-        const userAgent = req.headers['user-agent'] || '';
-        const accept = req.headers['accept'] || '';
-
-        // Detecta se e navegador (aceita HTML)
-        const isBrowser = accept.includes('text/html') && !userAgent.includes('Roblox');
-
-        if (isBrowser) {
-            // Retorna pagina de nao autorizado
-            res.setHeader('Content-Type', 'text/html');
-            return res.send(`<!DOCTYPE html>
+// Pagina HTML de nao autorizado (igual tcscripts)
+const UNAUTHORIZED_HTML = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAO AUTORIZADO</title>
+    <title>Nao autorizado</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
         body {
-            font-family: 'Consolas', monospace;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
+            margin: 0; padding: 0;
+            height: 100vh;
+            font-family: 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            text-align: center;
+            background-color: #0a0a0a;
         }
-        h1 { color: #ff4757; font-size: 3em; margin-bottom: 20px; }
-        p { color: #ff6b6b; font-size: 1.2em; }
-        img { margin-bottom: 20px; }
+        .container {
+            background: #fff;
+            border: 4px solid #e63946;
+            border-radius: 20px;
+            padding: 50px 70px;
+            text-align: center;
+            box-shadow: 0 0 15px #e63946aa, 0 0 40px #e6394644, 0 0 70px #e6394622;
+            max-width: 420px;
+            user-select: none;
+        }
+        .emoji {
+            font-size: 6.5rem;
+            color: #e63946;
+            animation: pulse 2s ease-in-out infinite alternate;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 20px #e63946aa);
+        }
+        h1 {
+            font-size: 2.8rem;
+            margin: 0 0 15px;
+            color: #1d1d1d;
+            text-shadow: 0 0 5px #e63946aa;
+        }
+        p {
+            font-size: 1.2rem;
+            color: #555;
+            margin: 0;
+            font-weight: 600;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px #e63946aa); }
+            100% { transform: scale(1.12); filter: drop-shadow(0 0 30px #e63946cc); }
+        }
     </style>
 </head>
 <body>
-    <img src="https://i.imgur.com/JvPrBbS.png" alt="emoji rindo" width="100">
-    <h1>NAO AUTORIZADO</h1>
-    <p>TENTE DESOBFUSCAR OUTRO SCRIPT!!!!!</p>
+    <div class="container">
+        <div class="emoji">&#10060;</div>
+        <h1>Nao autorizado</h1>
+        <p>Voce nao tem permissao para acessar esta pagina.</p>
+    </div>
 </body>
-</html>`);
+</html>`;
+
+// Detecta se e navegador (NAO executor Roblox)
+function isBrowser(req) {
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const accept = req.headers['accept'] || '';
+    const acceptLang = req.headers['accept-language'] || '';
+    const secFetchSite = req.headers['sec-fetch-site'] || '';
+    const secFetchMode = req.headers['sec-fetch-mode'] || '';
+
+    // Headers que SO navegadores enviam
+    if (secFetchSite || secFetchMode) return true;
+    if (accept.includes('text/html')) return true;
+    if (acceptLang) return true;
+
+    // User-Agents de navegadores/ferramentas
+    const browserAgents = [
+        'mozilla', 'chrome', 'safari', 'firefox', 'edge', 'opera',
+        'postman', 'insomnia', 'curl', 'wget', 'python', 'node',
+        'axios', 'got', 'java', 'okhttp', 'apache', 'go-http',
+        'ruby', 'perl', 'php', 'httpie', 'fiddler', 'charles'
+    ];
+
+    for (const agent of browserAgents) {
+        if (userAgent.includes(agent)) return true;
+    }
+
+    return false;
+}
+
+module.exports = async (req, res) => {
+    // Se for navegador, mostra pagina de nao autorizado
+    if (isBrowser(req)) {
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(403).send(UNAUTHORIZED_HTML);
+    }
+
+    // E executor Roblox - retorna o codigo
+    try {
+        let { id } = req.query;
+
+        // Tenta pegar ID do path (/raw/123)
+        if (!id) {
+            const match = req.url.match(/\/raw\/(\d+)/);
+            if (match) id = match[1];
+        }
+
+        if (!id) {
+            return res.status(404).send('-- ID nao fornecido');
         }
 
         const client = await clientPromise;
@@ -50,15 +118,14 @@ module.exports = async (req, res) => {
         const script = await scripts.findOne({ id: parseInt(id) });
 
         if (!script) {
-            res.setHeader('Content-Type', 'text/plain');
-            return res.status(404).send('Script nao encontrado');
+            return res.status(404).send('-- Script nao encontrado');
         }
 
         res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Cache-Control', 'no-store');
         return res.send(script.script);
     } catch (error) {
         console.error(error);
-        res.setHeader('Content-Type', 'text/plain');
-        return res.status(500).send('Erro no servidor');
+        return res.status(500).send('-- Erro no servidor');
     }
 };

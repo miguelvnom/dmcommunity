@@ -23,12 +23,15 @@ module.exports = async (req, res) => {
         const client = await clientPromise;
         const db = client.db('dmcommunity');
 
-        // Verifica se o codigo e valido
+        // Verifica se o codigo e valido E se ja foi ativado pelo usuario
         const codes = db.collection('codes');
-        const codeData = await codes.findOne({ code: codigo.toUpperCase() });
+        const codeData = await codes.findOne({
+            code: codigo.toUpperCase(),
+            usado: true  // So aceita codigos que foram ativados
+        });
 
         if (!codeData) {
-            return res.json({ success: false, message: 'NAO AUTORIZADO TENTE DESOFUSCAR OUTRO SCRIPT' });
+            return res.json({ success: false, message: 'NAO AUTORIZADO - Codigo invalido ou nao ativado' });
         }
 
         // Busca o script
