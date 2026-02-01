@@ -31,33 +31,22 @@ const UNAUTHORIZED_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// Detecta se e browser/curl (NAO executor Roblox)
+// Detecta se e browser (NAO executor Roblox)
+// Apenas bloqueia se tiver headers que SO navegadores enviam
 function isBrowserOrTool(req) {
     const headers = req.headers || {};
 
-    // Headers que SO navegadores enviam
+    // Headers que SO navegadores enviam (executores Roblox nunca enviam esses)
     if (headers['sec-fetch-site']) return true;
     if (headers['sec-fetch-mode']) return true;
     if (headers['sec-fetch-dest']) return true;
     if (headers['sec-ch-ua']) return true;
-    if (headers['accept-language']) return true;
 
-    // Accept com text/html = browser
+    // Accept com text/html = browser pedindo pagina web
     const accept = headers['accept'] || '';
     if (accept.includes('text/html')) return true;
 
-    // User-Agents de browsers e ferramentas
-    const ua = (headers['user-agent'] || '').toLowerCase();
-    const blockedAgents = [
-        'mozilla', 'chrome', 'safari', 'firefox', 'edge', 'opera',
-        'postman', 'insomnia', 'curl', 'wget', 'python', 'node-fetch',
-        'axios', 'got', 'httpie', 'fiddler', 'charles'
-    ];
-
-    for (const agent of blockedAgents) {
-        if (ua.includes(agent)) return true;
-    }
-
+    // Se nao tem nenhum header de browser, permite (executor Roblox)
     return false;
 }
 
