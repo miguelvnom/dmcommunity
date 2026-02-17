@@ -142,6 +142,76 @@
             background: linear-gradient(45deg, #3498db, #2980b9);
         }
 
+        .btn-edit {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h3 {
+            color: #00d9ff;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .modal textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        .modal textarea:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(45deg, #636e72, #b2bec3);
+        }
+
         .message {
             text-align: center;
             padding: 15px;
@@ -384,6 +454,18 @@
         </div>
     </div>
 
+    <!-- Modal de Edicao -->
+    <div class="modal-overlay" id="modalEditar">
+        <div class="modal">
+            <h3>Editar Script</h3>
+            <textarea id="editarScriptTexto"></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="fecharModalEditar()">Cancelar</button>
+                <button class="btn" onclick="salvarEdicao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = window.location.origin;
         const STORAGE_KEY = 'dmcommunity_sessao_v2';
@@ -521,6 +603,7 @@
                             <button class="btn btn-small btn-copy" onclick="copiarScript(${script.id})">Copiar</button>
                             <button class="btn btn-small btn-raw" onclick="copiarRawLink(${script.id})">Copiar Raw</button>
                             <button class="btn btn-small btn-copy" onclick="abrirView(${script.id})">Ver</button>
+                            ${script.autor === usuarioAtual ? `<button class="btn btn-small btn-edit" onclick="editarScript(${script.id})">Editar</button>` : ''}
                             ${script.autor === usuarioAtual ? `<button class="btn btn-small btn-delete" onclick="deletarScript(${script.id})">Deletar</button>` : ''}
                         </div>
                     </div>
@@ -602,6 +685,48 @@
                 }
             } catch (error) {
                 alert('Erro ao deletar script');
+            }
+        }
+
+        let editandoScriptId = null;
+
+        function editarScript(id) {
+            const code = document.getElementById('code-' + id).textContent;
+            editandoScriptId = id;
+            document.getElementById('editarScriptTexto').value = code;
+            document.getElementById('modalEditar').classList.add('active');
+        }
+
+        function fecharModalEditar() {
+            document.getElementById('modalEditar').classList.remove('active');
+            editandoScriptId = null;
+        }
+
+        async function salvarEdicao() {
+            const novoScript = document.getElementById('editarScriptTexto').value.trim();
+
+            if (!novoScript) {
+                alert('O codigo nao pode estar vazio');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/scripts?id=${editandoScriptId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo: codigoAtual, script: novoScript })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    fecharModalEditar();
+                    carregarScripts();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Erro ao editar script');
             }
         }
 

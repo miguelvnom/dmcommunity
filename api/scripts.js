@@ -2,7 +2,7 @@ const clientPromise = require('./lib/mongodb');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -49,6 +49,32 @@ module.exports = async (req, res) => {
             await scripts.insertOne(novoScript);
 
             return res.json({ success: true, message: 'Script salvo com sucesso!' });
+        }
+
+        // PUT - Editar script
+        if (req.method === 'PUT') {
+            const { id } = req.query;
+            const { codigo, script: novoScript } = req.body;
+
+            const codeData = await codes.findOne({ code: codigo?.toUpperCase() });
+
+            if (!codeData) {
+                return res.json({ success: false, message: 'Codigo de acesso invalido' });
+            }
+
+            const scriptExistente = await scripts.findOne({ id: parseInt(id) });
+
+            if (!scriptExistente) {
+                return res.json({ success: false, message: 'Script nao encontrado' });
+            }
+
+            if (scriptExistente.autor !== codeData.discordTag) {
+                return res.json({ success: false, message: 'Voce so pode editar seus proprios scripts' });
+            }
+
+            await scripts.updateOne({ id: parseInt(id) }, { $set: { script: novoScript } });
+
+            return res.json({ success: true, message: 'Script atualizado!' });
         }
 
         // DELETE - Deletar script

@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Content-Type': 'application/json'
     };
 
@@ -60,6 +60,33 @@ exports.handler = async (event, context) => {
             await scripts.insertOne(novoScript);
 
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Script salvo com sucesso!' }) };
+        }
+
+        // PUT - Editar script
+        if (event.httpMethod === 'PUT') {
+            const params = event.queryStringParameters || {};
+            const { codigo, script: novoScript } = JSON.parse(event.body || '{}');
+            const id = params.id;
+
+            const codeData = await codes.findOne({ code: codigo?.toUpperCase() });
+
+            if (!codeData) {
+                return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Codigo de acesso invalido' }) };
+            }
+
+            const scriptExistente = await scripts.findOne({ id: parseInt(id) });
+
+            if (!scriptExistente) {
+                return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Script nao encontrado' }) };
+            }
+
+            if (scriptExistente.autor !== codeData.discordTag) {
+                return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Voce so pode editar seus proprios scripts' }) };
+            }
+
+            await scripts.updateOne({ id: parseInt(id) }, { $set: { script: novoScript } });
+
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Script atualizado!' }) };
         }
 
         // DELETE - Deletar script
