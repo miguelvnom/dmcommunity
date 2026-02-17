@@ -587,7 +587,7 @@
             if (!confirm('Tem certeza que deseja deletar este script?')) return;
 
             try {
-                const response = await fetch(`${API_URL}/api/scripts/${id}`, {
+                const response = await fetch(`${API_URL}/api/scripts?id=${id}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ codigo: codigoAtual })
