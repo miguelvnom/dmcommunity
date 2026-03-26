@@ -76,6 +76,13 @@ function unauthorized(req, res) {
 
 module.exports = async (req, res) => {
     try {
+        // Bloqueia curl/scrapers antes de qualquer validacao
+        const ua = (req.headers['user-agent'] || '').toLowerCase();
+        if (BLOCKED_UA.some(blocked => ua.includes(blocked))) {
+            res.setHeader('Content-Type', 'text/plain');
+            return res.status(403).send('-- NAO AUTORIZADO\n-- Acesso bloqueado');
+        }
+
         let { id, code } = req.query;
 
         // Tenta pegar ID do path (/raw/123)
