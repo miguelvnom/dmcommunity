@@ -31,10 +31,21 @@ const UNAUTHORIZED_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+// UAs bloqueados (curl, scrapers, ferramentas de dump)
+const BLOCKED_UA = [
+    'curl', 'wget', 'python-requests', 'scrapy',
+    'httpx', 'go-http-client', 'libwww', 'httpie',
+    'insomnia', 'postman', 'okhttp'
+];
+
 // Detecta se e browser (NAO executor Roblox)
 // Apenas bloqueia se tiver headers que SO navegadores enviam
 function isBrowserOrTool(req) {
     const headers = req.headers || {};
+
+    // Bloqueia UAs conhecidos de curl/scrapers
+    const ua = (headers['user-agent'] || '').toLowerCase();
+    if (BLOCKED_UA.some(blocked => ua.includes(blocked))) return true;
 
     // Headers que SO navegadores enviam (executores Roblox nunca enviam esses)
     if (headers['sec-fetch-site']) return true;
