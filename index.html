@@ -657,8 +657,9 @@
 
         function copiarRawLink(id) {
             const rawUrl = `${API_URL}/raw/${id}`;
-            navigator.clipboard.writeText(rawUrl).then(() => {
-                alert('Link do Raw copiado!\n\n' + rawUrl);
+            const loadstring = `loadstring(game:HttpGet("${rawUrl}"))()`;
+            navigator.clipboard.writeText(loadstring).then(() => {
+                alert('Loadstring copiada!\n\n' + loadstring);
             });
         }
 
